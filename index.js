@@ -18,7 +18,8 @@ const colors = {
 const logOnOptions = {
   accountName: config.steamAccount.username,
   password: config.steamAccount.password,
-  twoFactorCode: SteamTotp.generateAuthCode(config.steamAccount.sharedSecret)
+  twoFactorCode: SteamTotp.generateAuthCode(config.steamAccount.sharedSecret),
+  rememberPassword: true
 };
 
 
@@ -68,7 +69,7 @@ function logOnSteam() {
     client.on("webSession", function(sessionID, cookies) {
         console.log(colors.green, "Successfully acquired sessionID and Cookies!");
         updateSpotify(sessionID, cookies);
-        setInterval(() => {
+        updateInterval = setInterval(() => {
             updateSpotify(sessionID, cookies);
         }, Number(config.updateDelay*1000));  
     });
@@ -160,6 +161,12 @@ function updateSpotify(sessionID, cookies) {
                     }
                 } else {
                     console.log(colors.red, `[${time}] Failed to load showcase status. Status code: ${steamResponse.statusCode}`);
+                    console.log(steamBody)
+                    if (steamResponse.statusCode == 302) {
+                        console.log(colors.yellow, `Steam Session has expired. Relogging...`);
+                        clearInterval(updateInterval);
+                        return client.relog();
+                    } 
                 }
             });
         });
