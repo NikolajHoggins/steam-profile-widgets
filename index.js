@@ -6,11 +6,12 @@ const btoa = require('btoa');
 const client = new SteamUser();
 const config = require('./config.json');
 
-
 const colors = {
     red: "\x1b[31m%s\x1b[0m",
     purple: "\x1b[35m%s\x1b[0m",
-    green: "\x1b[32m%s\x1b[0m"
+    green: "\x1b[32m%s\x1b[0m",
+    cyan: "\x1b[36m%s\x1b[0m",
+    yellow: "\x1b[33m%s\x1b[0m"
 }
 
 //Account Credentials
@@ -20,7 +21,12 @@ const logOnOptions = {
   twoFactorCode: SteamTotp.generateAuthCode(config.steamAccount.sharedSecret)
 };
 
-function renewOAuth() {
+
+console.log("\x1b[36m%s\x1b[0m", "Spotify Widget for Steam Community Profiles\nMade by Tsukani/zyN & Hoggins\nMake sure to read through the documentation first to ensure everything is set up correctly!\n");
+console.log("\x1b[33m%s\x1b[0m", `Updating showcase every ${config.updateDelay} second${config.updateDelay == 1 ? "" : "s"}.`);
+if (!config.steamAccount.sharedSecret) console.log("\x1b[31m%s\x1b[0m", "Including your sharedSecret is recommended to avoid unexpected problems regarding Steam sessions and the script stopping unexpectedly.");
+
+function renewAccessToken() {
     console.log(colors.purple, "Aquireing Access Token...");
     var refreshHeaders = {
         'Authorization': 'Basic ' + btoa(`${config.spotify.client_id}:${config.spotify.client_secret}`),
@@ -106,18 +112,18 @@ function updateSpotify(sessionID, cookies) {
         };
         request(spotifyOptions, function (spotifyError, spotifyResponse, spotifyBody) {
             if (!spotifyBody) {
-                steamBoxString = `Currently not listening to Spotify.`;
+                config.displayNotPlaying ? steamBoxString = 'Currently not listening to Spotify.' : steamBoxString = '';
             } else {
                 data = JSON.parse(spotifyBody);
                 if (!spotifyError && spotifyResponse.statusCode == 200) {
                     try {
-                        steamBoxString = `[b]Currently listning to Spotify:[/b]\n[url=${data.item.external_urls.spotify}]${data.item.artists[0].name} - ${data.item.name}[/url]\n${data.is_playing ? "▶" : "❚❚"} ${secondsToMinutesSeconds((Number(data.progress_ms)/1000).toFixed(0))} / ${secondsToMinutesSeconds((Number(data.item.duration_ms)/1000).toFixed(0))} ${progressBar[Math.floor(((Number(data.progress_ms)/1000).toFixed(0)/(Number(data.item.duration_ms)/1000).toFixed(0))*20)]}`;
+                        steamBoxString = `[b]Currently listning to Spotify:[/b]\n[url=${data.item.external_urls.spotify}]${data.item.artists[0].name} - ${data.item.name}[/url]\n${data.is_playing ? "▶" : "❚❚"} ${secondsToMinutesSeconds((Number(data.progress_ms)/1000).toFixed(0))} / ${secondsToMinutesSeconds((Number(data.item.duration_ms)/1000).toFixed(0))} ${progressBar[Math.floor(((Number(data.progress_ms)/1000).toFixed(0)/(Number(data.item.duration_ms)/1000).toFixed(0))*20)]}${config.displayUpdateInformation ? `\n(Updating every ${config.updateDelay} seconds)` : ""}`;
                     } catch(e){
-                        steamBoxString = `Currently not listening to Spotify.`;
+                        config.displayNotPlaying ? steamBoxString = 'Currently not listening to Spotify.' : steamBoxString = '';
                     }        
                 } else if (spotifyResponse.statusCode == 401) {
-                    renewOAuth();
-                    return console.log(colors.red, "OAuth token has expired. Renewing...");
+                    console.log(colors.red, "Access Token has expired. Renewing...");
+                    return renewAccessToken();
                 } else {
                     steamBoxString = `Currently not listening to Spotify.`;
                 }
@@ -127,6 +133,7 @@ function updateSpotify(sessionID, cookies) {
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Cookie": cookies
             };
+
             var steamOptions = {
                 url: `https://steamcommunity.com/profiles/${config.steamAccount.steamID64}/edit`,
                 method: "POST",
@@ -159,4 +166,4 @@ function updateSpotify(sessionID, cookies) {
     } catch(e){console.log(colors.red, `An error occured: ${e}`);}
 }
 
-renewOAuth();
+renewAccessToken();

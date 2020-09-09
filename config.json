@@ -12,5 +12,7 @@
         "refreshToken": "",
         "authorizationCode": ""
     },
-    "updateDelay": 30
+    "updateDelay": 30,
+    "displayNotPlaying": false,
+    "displayUpdateInformation": false
 }
