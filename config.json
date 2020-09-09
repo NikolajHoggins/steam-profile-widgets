@@ -1,3 +1,16 @@
 {
-    "profileData": ""
+    "steamAccount": {
+        "username": "",
+        "password": "",
+        "sharedSecret": "",
+        "steamID64": "",
+        "profileData": ""
+    },
+    "spotify": {
+        "client_id": "",
+        "client_secret": "",
+        "refreshToken": "",
+        "authorizationCode": ""
+    },
+    "updateDelay": 30
 }
