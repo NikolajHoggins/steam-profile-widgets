@@ -11,14 +11,14 @@ const colors = {
 
 console.log(colors.purple, "Aquireing Refresh Token...");
 var headers = {
-    'Authorization': 'Basic ' + btoa(`${config.client_id}:${config.client_secret}`),
+    'Authorization': 'Basic ' + btoa(`${config.spotify.client_id}:${config.spotify.client_secret}`),
     "Content-Type": "application/x-www-form-urlencoded",
 };
     
 var options = {
     url: `https://accounts.spotify.com/api/token`,
     method: "POST",
-    body: `grant_type=authorization_code&code=${config.authorizationCode}&redirect_uri=https://spotify.com`,
+    body: `grant_type=authorization_code&code=${config.spotify.authorizationCode}&redirect_uri=https://spotify.com`,
     headers: headers,
 };
 
