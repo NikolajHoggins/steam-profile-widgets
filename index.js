@@ -125,7 +125,7 @@ function updateSpotify(sessionID, cookies) {
                     console.log(colors.red, "Access Token has expired. Renewing...");
                     return renewAccessToken();
                 } else {
-                    steamBoxString = `Currently not listening to Spotify.`;
+                    config.displayNotPlaying ? steamBoxString = 'Currently not listening to Spotify.' : steamBoxString = '';
                 }
             }
 
