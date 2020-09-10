@@ -1,0 +1,17 @@
+{
+  "steamAccount": {
+    "username": "",
+    "password": "",
+    "sharedSecret": "",
+    "steamID64": "",
+    "profileData": ""
+  },
+  "spotify": {
+    "client_id": "",
+    "client_secret": "",
+    "refreshToken": ""
+  },
+  "updateDelay": 15,
+  "displayNotPlaying": false,
+  "displayUpdateInformation": false
+}
