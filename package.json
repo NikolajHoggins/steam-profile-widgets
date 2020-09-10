@@ -1,0 +1,32 @@
+{
+  "name": "steam-profile-widgets",
+  "version": "1.0.0",
+  "description": "Node bot to create dynamic widgets on steam profiles",
+  "main": "index.js",
+  "dependencies": {
+    "btoa": "^1.2.1",
+    "dotenv": "^8.2.0",
+    "readline-sync": "^1.4.10",
+    "request": "^2.88.2",
+    "steam-user": "^4.18.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "setup": "cp ./config.json.example ./config.json && node getRefreshToken.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NikolajHoggins/steam-profile-widgets.git"
+  },
+  "keywords": [
+    "steam",
+    "bot"
+  ],
+  "author": "Hoggins & Tsukani",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NikolajHoggins/steam-profile-widgets/issues"
+  },
+  "homepage": "https://github.com/NikolajHoggins/steam-profile-widgets#readme"
+}
