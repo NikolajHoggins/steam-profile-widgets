@@ -14,6 +14,8 @@ const colors = {
     yellow: "\x1b[33m%s\x1b[0m"
 }
 
+if(!config.steamAccount.username||!config.steamAccount.password||!config.steamAccount.steamID64||!config.steamAccount.profileData||!config.spotify.client_id||!config.spotify.client_secret||!config.spotify.refreshToken||!config.updateDelay)return console.log(colors.red,"There are errors with your config.json file. Please make sure it is filled out before running this application.");
+
 //Account Credentials
 const logOnOptions = {
   accountName: config.steamAccount.username,
@@ -22,10 +24,10 @@ const logOnOptions = {
   rememberPassword: true
 };
 
+var notPlayingDisableUpdating = false;
 
-console.log("\x1b[36m%s\x1b[0m", "Spotify Widget for Steam Community Profiles\nMade by Tsukani/zyN & Hoggins\nMake sure to read through the documentation first to ensure everything is set up correctly!\n");
-console.log("\x1b[33m%s\x1b[0m", `Updating showcase every ${config.updateDelay} second${config.updateDelay == 1 ? "" : "s"}.`);
-if (!config.steamAccount.sharedSecret) console.log("\x1b[31m%s\x1b[0m", "Including your sharedSecret is recommended to avoid unexpected problems regarding Steam sessions and the script stopping unexpectedly.");
+console.log(colors.cyan, "Spotify Widget for Steam Community Profiles\nMade by Tsukani/zyN & Hoggins\nMake sure to read through the documentation first to ensure everything is set up correctly!\n");
+console.log(colors.yellow, `Updating showcase every ${config.updateDelay} second${config.updateDelay == 1 ? "" : "s"}.`);
 
 function renewAccessToken() {
     console.log(colors.purple, "Aquireing Access Token...");
@@ -113,19 +115,22 @@ function updateSpotify(sessionID, cookies) {
         };
         request(spotifyOptions, function (spotifyError, spotifyResponse, spotifyBody) {
             if (!spotifyBody) {
+                if (notPlayingDisableUpdating) {return} 
                 config.displayNotPlaying ? steamBoxString = 'Currently not listening to Spotify.' : steamBoxString = '';
             } else {
                 data = JSON.parse(spotifyBody);
                 if (!spotifyError && spotifyResponse.statusCode == 200) {
                     try {
-                        steamBoxString = `[b]Currently listning to Spotify:[/b]\n[url=${data.item.external_urls.spotify}]${data.item.artists[0].name} - ${data.item.name}[/url]\n${data.is_playing ? "▶" : "❚❚"} ${secondsToMinutesSeconds((Number(data.progress_ms)/1000).toFixed(0))} / ${secondsToMinutesSeconds((Number(data.item.duration_ms)/1000).toFixed(0))} ${progressBar[Math.floor(((Number(data.progress_ms)/1000).toFixed(0)/(Number(data.item.duration_ms)/1000).toFixed(0))*20)]}${config.displayUpdateInformation ? `\n(Updating every ${config.updateDelay} seconds)` : ""}`;
+                        steamBoxString = `[b]Currently listning to Spotify:[/b]\n${data.item.external_urls.spotify ? `[url=${data.item.external_urls.spotify}]` : ""}${data.item.artists[0].name ? `${data.item.artists[0].name} - ` : ""}${data.item.name}${data.item.external_urls.spotify ? "[/url]" : ""}\n${data.is_playing ? "▶" : "❚❚"} ${secondsToMinutesSeconds((Number(data.progress_ms)/1000).toFixed(0))} / ${secondsToMinutesSeconds((Number(data.item.duration_ms)/1000).toFixed(0))} ${progressBar[Math.floor(((Number(data.progress_ms)/1000).toFixed(0)/(Number(data.item.duration_ms)/1000).toFixed(0))*20)]}${config.displayUpdateInformation ? `\n(Updating every ${config.updateDelay} seconds)` : ""}`;
                     } catch(e){
+                        if (notPlayingDisableUpdating) {return} 
                         config.displayNotPlaying ? steamBoxString = 'Currently not listening to Spotify.' : steamBoxString = '';
                     }        
                 } else if (spotifyResponse.statusCode == 401) {
                     console.log(colors.red, "Access Token has expired. Renewing...");
                     return renewAccessToken();
                 } else {
+                    if (notPlayingDisableUpdating) {return} 
                     config.displayNotPlaying ? steamBoxString = 'Currently not listening to Spotify.' : steamBoxString = '';
                 }
             }
@@ -154,14 +159,17 @@ function updateSpotify(sessionID, cookies) {
             request(steamOptions, function (steamError, steamResponse, steamBody) {
                 if (!steamError && steamResponse.statusCode == 200) {
                     if (JSON.parse(steamBody).success == "1") {
-                        if (spotifyBody) {console.log(colors.green, `[${time}] Showcase updated. [${data.item ? `${data.item.artists[0].name} - ${data.item.name}` : "Ad break"}]`);}
-                        else {console.log(colors.green, `[${time}] Showcase updated. [Not playing]`);}
+                        try {
+                            if (spotifyBody) {console.log(colors.green, `[${time}] Showcase updated. [${data.item.artists[0].name ? `${data.item.artists[0].name} - ` : ""}${data.item.name}]`); notPlayingDisableUpdating = false}
+                            else {console.log(colors.green, `[${time}] Showcase updated. [Not playing]`); notPlayingDisableUpdating = true;}
+                        } catch(e) {
+                            console.log(colors.green, `[${time}] Showcase updated. [Not playing]`); notPlayingDisableUpdating = true;
+                        }
                     } else {
                         console.log(colors.red, `[${time}] Failed to update showcase. Please check your profileData.`);
                     }
                 } else {
                     console.log(colors.red, `[${time}] Failed to load showcase status. Status code: ${steamResponse.statusCode}`);
-                    console.log(steamBody)
                     if (steamResponse.statusCode == 302) {
                         console.log(colors.yellow, `Steam Session has expired. Relogging...`);
                         clearInterval(updateInterval);
